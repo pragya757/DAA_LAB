@@ -1,0 +1,64 @@
+#include <stdio.h>
+
+int main() {
+    int n, arr[100], low, high, i, j, pivot, temp;
+
+    // User input for array size
+    printf("Enter number of elements: ");
+    scanf("%d", &n);
+
+    // User input for array elements
+    printf("Enter %d elements: ", n);
+    for (i = 0; i < n; i++) {
+        scanf("%d", &arr[i]);
+    }
+
+    // Quick Sort implementation without functions
+    int stack[100], top = -1;
+    stack[++top] = 0;   // Push low
+    stack[++top] = n - 1; // Push high
+
+    while (top >= 0) {
+        high = stack[top--]; // Pop high
+        low = stack[top--];  // Pop low
+
+        pivot = arr[low];
+        i = low;
+        j = high;
+
+        while (i < j) {
+            while (arr[j] > pivot) j--; // Move j left
+            while (arr[i] <= pivot && i < j) i++; // Move i right
+            if (i < j) { // Swap arr[i] and arr[j]
+                temp = arr[i];
+                arr[i] = arr[j];
+                arr[j] = temp;
+            }
+        }
+
+        // Swap pivot with arr[j]
+        arr[low] = arr[j];
+        arr[j] = pivot;
+
+        // Push left sub-array indices
+        if (low < j - 1) {
+            stack[++top] = low;
+            stack[++top] = j - 1;
+        }
+
+        // Push right sub-array indices
+        if (j + 1 < high) {
+            stack[++top] = j + 1;
+            stack[++top] = high;
+        }
+    }
+
+    // Print the sorted array
+    printf("Sorted array: ");
+    for (i = 0; i < n; i++) {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
+
+    return 0;
+}
