@@ -1,0 +1,132 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int** allocateMatrix(int size) {
+    int** matrix = (int**)malloc(size * sizeof(int));
+    for (int i = 0; i < size; i++) {
+        matrix[i] = (int*)malloc(size * sizeof(int));
+    }
+    return matrix;
+}
+
+void inputMatrix(int** matrix, int size) {
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            scanf("%d", &matrix[i][j]);
+        }
+    }
+}
+
+void printMatrix(int** matrix, int size) {
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            printf("%d ", matrix[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+void addMatrix(int** A, int** B, int** C, int size, int sign) {
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            C[i][j] = A[i][j] + sign * B[i][j];
+        }
+    }
+}
+
+void strassenMultiply(int** A, int** B, int** C, int size) {
+    if (size == 1) {
+        C[0][0] = A[0][0] * B[0][0];
+        return;
+    }
+
+    int newSize = size / 2;
+    int** matrices[17];
+    for (int i = 0; i < 17; i++) {
+        matrices[i] = allocateMatrix(newSize);
+    }
+
+    // Divide matrices into submatrices
+    for (int i = 0; i < newSize; i++) {
+        for (int j = 0; j < newSize; j++) {
+            matrices[0][i][j] = A[i][j];
+            matrices[1][i][j] = A[i][j + newSize];
+            matrices[2][i][j] = A[i + newSize][j];
+            matrices[3][i][j] = A[i + newSize][j + newSize];
+            matrices[4][i][j] = B[i][j];
+            matrices[5][i][j] = B[i][j + newSize];
+            matrices[6][i][j] = B[i + newSize][j];
+            matrices[7][i][j] = B[i + newSize][j + newSize];
+        }
+    }
+
+    // Calculate intermediate matrices
+    addMatrix(matrices[0], matrices[3], matrices[8], newSize, 1);
+    addMatrix(matrices[4], matrices[7], matrices[9], newSize, 1);
+    strassenMultiply(matrices[8], matrices[9], matrices[10], newSize);
+
+    addMatrix(matrices[2], matrices[3], matrices[8], newSize, 1);
+    strassenMultiply(matrices[8], matrices[4], matrices[11], newSize);
+
+    addMatrix(matrices[5], matrices[7], matrices[8], newSize, -1);
+    strassenMultiply(matrices[0], matrices[8], matrices[12], newSize);
+
+    addMatrix(matrices[6], matrices[4], matrices[8], newSize, -1);
+    strassenMultiply(matrices[3], matrices[8], matrices[13], newSize);
+
+    addMatrix(matrices[0], matrices[1], matrices[8], newSize, 1);
+    strassenMultiply(matrices[8], matrices[7], matrices[14], newSize);
+
+    addMatrix(matrices[2], matrices[0], matrices[8], newSize, -1);
+    addMatrix(matrices[4], matrices[5], matrices[9], newSize, 1);
+    strassenMultiply(matrices[8], matrices[9], matrices[15], newSize);
+
+    addMatrix(matrices[1], matrices[3], matrices[8], newSize, -1);
+    addMatrix(matrices[6], matrices[7], matrices[9], newSize, 1);
+    strassenMultiply(matrices[8], matrices[9], matrices[16], newSize);
+
+    // Combine results into final matrix
+    addMatrix(matrices[10], matrices[13], matrices[8], newSize, 1);
+    addMatrix(matrices[8], matrices[14], matrices[9], newSize, -1);
+    addMatrix(matrices[9], matrices[16], matrices[0], newSize, 1);
+
+    addMatrix(matrices[12], matrices[14], matrices[1], newSize, 1);
+    addMatrix(matrices[11], matrices[13], matrices[2], newSize, 1);
+
+    addMatrix(matrices[10], matrices[12], matrices[8], newSize, 1);
+    addMatrix(matrices[8], matrices[11], matrices[9], newSize, -1);
+    addMatrix(matrices[9], matrices[15], matrices[3], newSize, 1);
+
+    // Final matrix assignment
+    for (int i = 0; i < newSize; i++) {
+        for (int j = 0; j < newSize; j++) {
+            C[i][j] = matrices[0][i][j];
+            C[i][j + newSize] = matrices[1][i][j];
+            C[i + newSize][j] = matrices[2][i][j];
+            C[i + newSize][j + newSize] = matrices[3][i][j];
+        }
+    }
+}
+
+int main() {
+    int n;
+    printf("Enter size of matrix (power of 2): ");
+    scanf("%d", &n);
+
+    int** A = allocateMatrix(n);
+    int** B = allocateMatrix(n);
+    int** C = allocateMatrix(n);
+
+    printf("Enter elements of first matrix:\n");
+    inputMatrix(A, n);
+
+    printf("Enter elements of second matrix:\n");
+    inputMatrix(B, n);
+
+    strassenMultiply(A, B, C, n);
+
+    printf("Resultant Matrix:\n");
+    printMatrix(C, n);
+
+    return 0;
+}
