@@ -1,0 +1,87 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct Point {
+    int x, y;
+} Point;
+
+// Swap function for sorting
+void swap(Point *p1, Point *p2) {
+    Point temp = *p1;
+    *p1 = *p2;
+    *p2 = temp;
+}
+
+// Function to find the orientation of three points
+int orientation(Point p, Point q, Point r) {
+    int val = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
+    if (val == 0) return 0; // Collinear
+    return (val > 0) ? 1 : 2; // Clockwise or Counterclockwise
+}
+
+// Function to find the bottom-most point
+int findBottomMost(Point points[], int n) {
+    int min = 0;
+    for (int i = 1; i < n; i++) {
+        if ((points[i].y < points[min].y) || 
+           (points[i].y == points[min].y && points[i].x < points[min].x))
+            min = i;
+    }
+    return min;
+}
+
+// Comparison function for sorting based on polar angle
+int compare(const void *vp1, const void *vp2) {
+    Point *p1 = (Point *)vp1;
+    Point *p2 = (Point *)vp2;
+    static Point p0;
+    
+    int o = orientation(p0, *p1, *p2);
+    if (o == 0)
+        return (p1->x * p1->x + p1->y * p1->y) - (p2->x * p2->x + p2->y * p2->y);
+    return (o == 2) ? -1 : 1;
+}
+
+// Convex Hull using Graham's scan
+void convexHull(Point points[], int n) {
+    if (n < 3) {
+        printf("Convex Hull is not possible.\n");
+        return;
+    }
+
+    int minIndex = findBottomMost(points, n);
+    swap(&points[0], &points[minIndex]);
+
+    // Sorting based on polar angle
+    qsort(&points[1], n - 1, sizeof(Point), compare);
+
+    // Stack for convex hull
+    Point hull[n];
+    int hullSize = 0;
+
+    for (int i = 0; i < n; i++) {
+        while (hullSize >= 2 && orientation(hull[hullSize - 2], hull[hullSize - 1], points[i]) != 2)
+            hullSize--; // Remove last point if it doesn't form a left turn
+        hull[hullSize++] = points[i];
+    }
+
+    // Display the Convex Hull
+    printf("Convex Hull:\n");
+    for (int i = 0; i < hullSize; i++)
+        printf("(%d, %d)\n", hull[i].x, hull[i].y);
+}
+
+int main() {
+    int n;
+    printf("Enter number of points: ");
+    scanf("%d", &n);
+    
+    Point points[n];
+    printf("Enter the points (x y):\n");
+    for (int i = 0; i < n; i++)
+        scanf("%d %d", &points[i].x, &points[i].y);
+
+    convexHull(points, n);
+
+    return 0;
+}
