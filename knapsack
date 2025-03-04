@@ -1,0 +1,64 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Structure to hold item details
+typedef struct {
+    int value, weight;
+    double ratio;
+} Item;
+
+// Function to compare two items based on value-to-weight ratio
+int compare(const void *a, const void *b) {
+    double r1 = ((Item*)a)->ratio;
+    double r2 = ((Item*)b)->ratio;
+    return (r2 > r1) - (r2 < r1);  // Descending order
+}
+
+// Function to solve the Fractional Knapsack Problem using Greedy Algorithm
+double fractionalKnapsack(int capacity, Item items[], int n) {
+    qsort(items, n, sizeof(Item), compare); // Sort items by ratio
+
+    double totalProfit = 0.0;
+    int currentWeight = 0;
+
+    for (int i = 0; i < n; i++) {
+        if (currentWeight + items[i].weight <= capacity) {
+            // Take the full item
+            totalProfit += items[i].value;
+            currentWeight += items[i].weight;
+        } else {
+            // Take the fractional part
+            int remainingCapacity = capacity - currentWeight;
+            totalProfit += items[i].ratio * remainingCapacity;
+            break; // Knapsack is full
+        }
+    }
+    return totalProfit;
+}
+
+int main() {
+    int n, capacity;
+    
+    // Input: Number of items and knapsack capacity
+    printf("Enter the number of items: ");
+    scanf("%d", &n);
+    printf("Enter the capacity of the knapsack: ");
+    scanf("%d", &capacity);
+
+    Item items[n];
+
+    // Input: Value and weight of each item
+    for (int i = 0; i < n; i++) {
+        printf("Enter value and weight for item %d: ", i + 1);
+        scanf("%d %d", &items[i].value, &items[i].weight);
+        items[i].ratio = (double)items[i].value / items[i].weight;
+    }
+
+    // Solve the knapsack problem
+    double maxProfit = fractionalKnapsack(capacity, items, n);
+
+    // Output: Maximum profit
+    printf("Maximum profit: %.2lf\n", maxProfit);
+    
+    return 0;
+}
