@@ -2,49 +2,49 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_TREE_HT 100
+#define MAX_SIZE 256
 
-// Min Heap Node
-typedef struct MinHeapNode {
+// Huffman Tree Node
+struct MinHeapNode {
     char data;
     unsigned freq;
     struct MinHeapNode *left, *right;
-} MinHeapNode;
+};
 
-// Min Heap
-typedef struct MinHeap {
+// Min Heap Structure
+struct MinHeap {
     unsigned size;
     unsigned capacity;
-    MinHeapNode **array;
-} MinHeap;
+    struct MinHeapNode **array;
+};
 
-// Function to create a new MinHeap Node
-MinHeapNode* newNode(char data, unsigned freq) {
-    MinHeapNode* temp = (MinHeapNode*)malloc(sizeof(MinHeapNode));
+// Create a new node
+struct MinHeapNode* newNode(char data, unsigned freq) {
+    struct MinHeapNode* temp = (struct MinHeapNode*)malloc(sizeof(struct MinHeapNode));
     temp->left = temp->right = NULL;
     temp->data = data;
     temp->freq = freq;
     return temp;
 }
 
-// Function to create a MinHeap
-MinHeap* createMinHeap(unsigned capacity) {
-    MinHeap* minHeap = (MinHeap*)malloc(sizeof(MinHeap));
+// Create a Min Heap
+struct MinHeap* createMinHeap(unsigned capacity) {
+    struct MinHeap* minHeap = (struct MinHeap*)malloc(sizeof(struct MinHeap));
     minHeap->size = 0;
     minHeap->capacity = capacity;
-    minHeap->array = (MinHeapNode**)malloc(minHeap->capacity * sizeof(MinHeapNode*));
+    minHeap->array = (struct MinHeapNode**)malloc(minHeap->capacity * sizeof(struct MinHeapNode*));
     return minHeap;
 }
 
-// Function to swap two MinHeap Nodes
-void swapMinHeapNode(MinHeapNode** a, MinHeapNode** b) {
-    MinHeapNode* temp = *a;
+// Swap two min heap nodes
+void swapMinHeapNode(struct MinHeapNode** a, struct MinHeapNode** b) {
+    struct MinHeapNode* t = *a;
     *a = *b;
-    *b = temp;
+    *b = t;
 }
 
-// Function to heapify a MinHeap
-void minHeapify(MinHeap* minHeap, int idx) {
+// Heapify
+void minHeapify(struct MinHeap* minHeap, int idx) {
     int smallest = idx;
     int left = 2 * idx + 1;
     int right = 2 * idx + 2;
@@ -53,29 +53,23 @@ void minHeapify(MinHeap* minHeap, int idx) {
         smallest = left;
     if (right < minHeap->size && minHeap->array[right]->freq < minHeap->array[smallest]->freq)
         smallest = right;
-
     if (smallest != idx) {
         swapMinHeapNode(&minHeap->array[smallest], &minHeap->array[idx]);
         minHeapify(minHeap, smallest);
     }
 }
 
-// Function to check if size of heap is 1
-int isSizeOne(MinHeap* minHeap) {
-    return minHeap->size == 1;
-}
-
-// Function to extract the minimum node from heap
-MinHeapNode* extractMin(MinHeap* minHeap) {
-    MinHeapNode* temp = minHeap->array[0];
+// Extract Min
+struct MinHeapNode* extractMin(struct MinHeap* minHeap) {
+    struct MinHeapNode* temp = minHeap->array[0];
     minHeap->array[0] = minHeap->array[minHeap->size - 1];
     --minHeap->size;
     minHeapify(minHeap, 0);
     return temp;
 }
 
-// Function to insert a new node to MinHeap
-void insertMinHeap(MinHeap* minHeap, MinHeapNode* minHeapNode) {
+// Insert node into Min Heap
+void insertMinHeap(struct MinHeap* minHeap, struct MinHeapNode* minHeapNode) {
     ++minHeap->size;
     int i = minHeap->size - 1;
     while (i && minHeapNode->freq < minHeap->array[(i - 1) / 2]->freq) {
@@ -85,157 +79,91 @@ void insertMinHeap(MinHeap* minHeap, MinHeapNode* minHeapNode) {
     minHeap->array[i] = minHeapNode;
 }
 
-// Function to build the MinHeap
-void buildMinHeap(MinHeap* minHeap) {
-    int n = minHeap->size - 1;
-    for (int i = (n - 1) / 2; i >= 0; --i) {
-        minHeapify(minHeap, i);
-    }
-}
-
-// Function to print the Huffman codes and store them in the codeTable
-void printCodes(MinHeapNode* root, int arr[], int top, char* codeTable[]) {
-    if (root->left) {
-        arr[top] = 0;
-        printCodes(root->left, arr, top + 1, codeTable);
-    }
-    if (root->right) {
-        arr[top] = 1;
-        printCodes(root->right, arr, top + 1, codeTable);
-    }
-    if (!root->left && !root->right) {
-        printf("%c\t%d\t", root->data, root->freq);
-        for (int i = 0; i < top; ++i) {
-            printf("%d", arr[i]);
-        }
-        printf("\n");
-
-        // Store the code in the codeTable
-        codeTable[root->data] = (char*)malloc(top + 1);
-        for (int i = 0; i < top; i++) {
-            codeTable[root->data][i] = arr[i] + '0';  // Convert 0/1 to '0'/'1'
-        }
-        codeTable[root->data][top] = '\0';  // Null-terminate the string
-    }
-}
-
-// Function to build the Huffman Tree
-MinHeapNode* buildHuffmanTree(char data[], int freq[], int size) {
-    MinHeapNode *left, *right, *top;
-
-    MinHeap* minHeap = createMinHeap(size);
-
-    for (int i = 0; i < size; ++i) {
+// Build Huffman Tree
+struct MinHeapNode* buildHuffmanTree(char data[], int freq[], int size) {
+    struct MinHeap* minHeap = createMinHeap(size);
+    for (int i = 0; i < size; ++i)
         minHeap->array[i] = newNode(data[i], freq[i]);
-    }
     minHeap->size = size;
-    buildMinHeap(minHeap);
-
-    while (!isSizeOne(minHeap)) {
-        left = extractMin(minHeap);
-        right = extractMin(minHeap);
-
-        top = newNode('$', left->freq + right->freq);
+    while (minHeap->size != 1) {
+        struct MinHeapNode *left = extractMin(minHeap);
+        struct MinHeapNode *right = extractMin(minHeap);
+        struct MinHeapNode *top = newNode('$', left->freq + right->freq);
         top->left = left;
         top->right = right;
-
         insertMinHeap(minHeap, top);
     }
-
     return extractMin(minHeap);
 }
 
-// Function to calculate the frequency of characters in a string
-void calculateFrequency(char *str, int *freq, char *data, int *size) {
-    int i = 0, j = 0;
-    int n = strlen(str);
-
-    // Initialize frequencies array to 0
-    for (i = 0; i < 256; i++) {
-        freq[i] = 0;
+// Store codes in table
+void storeCodes(struct MinHeapNode* root, int arr[], int top, char codes[MAX_SIZE][MAX_SIZE]) {
+    if (root->left) {
+        arr[top] = 0;
+        storeCodes(root->left, arr, top + 1, codes);
     }
-
-    // Calculate frequency of each character
-    for (i = 0; i < n; i++) {
-        freq[(int)str[i]]++;
+    if (root->right) {
+        arr[top] = 1;
+        storeCodes(root->right, arr, top + 1, codes);
     }
-
-    // Store the unique characters and their frequencies
-    for (i = 0; i < 256; i++) {
-        if (freq[i] > 0) {
-            data[j] = (char)i;
-            freq[j] = freq[i];
-            j++;
-        }
+    if (!root->left && !root->right) {
+        arr[top] = '\0';
+        for (int i = 0; i < top; i++)
+            codes[(int)root->data][i] = arr[i] + '0';
+        codes[(int)root->data][top] = '\0';
     }
-    *size = j;
 }
 
-// Function to encode the string using Huffman codes
-char* encode(char* str, char* codeTable[]) {
-    static char encodedStr[1000];
-    int index = 0;
-    for (int i = 0; str[i] != '\0'; i++) {
-        char* code = codeTable[(int)str[i]];
-        while (*code) {
-            encodedStr[index++] = *code;
-            code++;
-        }
-    }
-    encodedStr[index] = '\0';
-    return encodedStr;
+// Encode input string
+void encode(char *input, char codes[MAX_SIZE][MAX_SIZE], char *encoded) {
+    strcpy(encoded, "");
+    for (int i = 0; input[i] != '\0'; i++)
+        strcat(encoded, codes[(int)input[i]]);
 }
 
-// Function to decode the encoded string using Huffman tree
-void decode(MinHeapNode* root, char* encodedStr) {
-    MinHeapNode* current = root;
-    printf("\nDecoded string: ");
-    for (int i = 0; encodedStr[i] != '\0'; i++) {
-        if (encodedStr[i] == '0') {
-            current = current->left;
-        } else {
-            current = current->right;
-        }
-
-        // If we reached a leaf node, print the character
-        if (!current->left && !current->right) {
-            printf("%c", current->data);
-            current = root;  // Reset to root to decode next character
+// Decode encoded string
+void decode(struct MinHeapNode* root, char *encoded) {
+    struct MinHeapNode* curr = root;
+    printf("Decoded Text: ");
+    for (int i = 0; encoded[i] != '\0'; i++) {
+        curr = (encoded[i] == '0') ? curr->left : curr->right;
+        if (!curr->left && !curr->right) {
+            printf("%c", curr->data);
+            curr = root;
         }
     }
     printf("\n");
 }
 
-// Main function to drive the program
+// Driver Function
 int main() {
-    char str[1000];
-
-    // Input: String of characters
-    printf("Enter the string: ");
-    scanf("%s", str);
-
-    int freq[256] = {0};  // Frequency array for all ASCII characters
-    char data[256];  // Store the unique characters
-    int size = 0;  // Size of the data array
-
-    // Calculate the frequency of characters in the string
-    calculateFrequency(str, freq, data, &size);
-
-    // Build Huffman Tree
-    MinHeapNode* root = buildHuffmanTree(data, freq, size);
-
-    // Print the Huffman Codes
-    printf("\nCharacter\tFrequency\tHuffman Code\n");
-    int arr[MAX_TREE_HT], top = 0;
-    char* codeTable[256] = {0};  // Table to store Huffman codes
-    printCodes(root, arr, top, codeTable);
-
-    // Encode the string
-    char* encodedStr = encode(str, codeTable);
-    printf("\nEncoded string: %s\n", encodedStr);
-
-    // Decode the encoded string
-    decode(root, encodedStr);
-
+    char input[MAX_SIZE];
+    printf("Enter text: ");
+    scanf("%s", input);
+    int freq[MAX_SIZE] = {0};
+    for (int i = 0; input[i] != '\0'; i++)
+        freq[(int)input[i]]++;
+   
+    char chars[MAX_SIZE];
+    int freqArr[MAX_SIZE], n = 0;
+    for (int i = 0; i < MAX_SIZE; i++) {
+        if (freq[i] > 0) {
+            chars[n] = (char)i;
+            freqArr[n] = freq[i];
+            n++;
+        }
+    }
+    struct MinHeapNode* root = buildHuffmanTree(chars, freqArr, n);
+    char codes[MAX_SIZE][MAX_SIZE] = {{0}};
+    int arr[MAX_SIZE], top = 0;
+    storeCodes(root, arr, top, codes);
+    printf("Character | Frequency | Huffman Code\n");
+    for (int i = 0; i < n; i++)
+        printf("   %c      |    %d      | %s\n", chars[i], freqArr[i], codes[(int)chars[i]]);
+   
+    char encoded[MAX_SIZE * 8];
+    encode(input, codes, encoded);
+    printf("Encoded Text: %s\n", encoded);
+    decode(root, encoded);
     return 0;
 }
